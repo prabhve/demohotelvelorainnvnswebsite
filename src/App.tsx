@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Phone, MessageSquare, MapPin, Calendar, Users, Star, CheckCircle, 
-  Wifi, Zap, Coffee, Shield, Clock, Car, ChevronRight, X, Sparkles, 
-  Compass, Award, Bed, Tv, AirVent, Bath, Navigation, Menu
+  Wifi, Zap, Coffee, Shield, Clock, Car, ChevronRight, ChevronLeft, X, Sparkles, 
+  Compass, Award, Bed, Tv, AirVent, Bath, Navigation, Menu, Maximize2
 } from 'lucide-react';
 
 interface Room {
@@ -27,12 +27,14 @@ interface Room {
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Booking Bar State
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [roomType, setRoomType] = useState('Deluxe Room (₹2,199)');
   const [guests, setGuests] = useState('2 Guests');
+  const [dateError, setDateError] = useState('');
 
   // Inquiry Form State
   const [inquiryName, setInquiryName] = useState('');
@@ -41,6 +43,50 @@ export default function App() {
   const [inquiryMsg, setInquiryMsg] = useState('');
 
   const WHATSAPP_NUMBER = '919670215052';
+
+  // Set default dates (Today to Tomorrow) on mount
+  useEffect(() => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+    setCheckIn(formatDate(today));
+    setCheckOut(formatDate(tomorrow));
+  }, []);
+
+  // Calculate nights
+  const calculateNights = () => {
+    if (!checkIn || !checkOut) return 1;
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 1;
+  };
+
+  const nights = calculateNights();
+
+  // Validate dates when changed
+  const handleCheckInChange = (val: string) => {
+    setCheckIn(val);
+    if (checkOut && val >= checkOut) {
+      // Auto set check-out to next day
+      const nextDay = new Date(val);
+      nextDay.setDate(nextDay.getDate() + 1);
+      setCheckOut(nextDay.toISOString().split('T')[0]);
+    }
+    setDateError('');
+  };
+
+  const handleCheckOutChange = (val: string) => {
+    if (checkIn && val <= checkIn) {
+      setDateError('Check-out date must be after check-in date.');
+    } else {
+      setDateError('');
+    }
+    setCheckOut(val);
+  };
 
   const roomsData: Room[] = [
     {
@@ -51,14 +97,15 @@ export default function App() {
       bed: '1 King Bed / Twin Beds',
       price: 2199,
       originalPrice: 2799,
-      image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+      image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80',
       gallery: [
-        'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1595576508898-0ad5c879a061?auto=format&fit=crop&w=800&q=80'
+        'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1595576508898-0ad5c879a061?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1200&q=80'
       ],
       description: 'Designed with warmth and heritage touches, our Deluxe Rooms offer supreme comfort after a soul-stirring day at the ghats. Features plush bedding, air conditioning, high-speed Wi-Fi, and a pristine en-suite bathroom with 24/7 hot water.',
-      amenities: ['King / Twin Beds', 'High-Speed Wi-Fi', 'Smart TV with OTT', 'Air Conditioning', '24/7 Hot Water', 'Daily Housekeeping', 'In-Room Tea/Coffee Maker']
+      amenities: ['King / Twin Beds', 'High-Speed Wi-Fi', 'Smart TV with OTT', 'Air Conditioning', '24/7 Hot Water', 'Daily Housekeeping', 'In-Room Tea/Coffee Maker', 'Work Desk']
     },
     {
       id: 'super-deluxe',
@@ -68,11 +115,12 @@ export default function App() {
       bed: '1 King Bed + Cozy Sofa',
       price: 2999,
       originalPrice: 3799,
-      image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80',
+      image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1200&q=80',
       gallery: [
-        'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=800&q=80'
+        'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80'
       ],
       description: 'Step into elevated luxury with our Super Deluxe rooms. Boasting extra floor space, a comfortable reading sofa, tasteful Kashi-inspired artwork, and premium bath amenities. Ideal for travelers seeking extra relaxation.',
       amenities: ['City View Window', 'King Bed & Lounge Sofa', 'High-Speed Wi-Fi', 'Smart TV', 'Mini Fridge', 'Work Desk', 'Premium Toiletries', '24/7 Room Service']
@@ -85,11 +133,12 @@ export default function App() {
       bed: '2 Queen Beds (Up to 4 Guests)',
       price: 3899,
       originalPrice: 4899,
-      image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80',
+      image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=80',
       gallery: [
-        'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=800&q=80'
+        'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1200&q=80'
       ],
       description: 'Perfect for families or pilgrim groups traveling together. Our Executive Family Suite features two comfortable queen beds, generous wardrobe space, separate seating nook, and top-tier hospitality for a harmonious stay.',
       amenities: ['Two Queen Beds', 'Sleeps up to 4 Guests', 'Spacious Seating Area', 'High-Speed Wi-Fi', '2 Smart TVs', 'Large Wardrobe', 'Luxurious Bath', 'Priority Room Service']
@@ -97,15 +146,21 @@ export default function App() {
   ];
 
   const handleWhatsAppBooking = (roomName?: string, price?: number) => {
+    let selectedRoomObj = roomsData.find(r => roomName && r.name.toLowerCase() === roomName.toLowerCase());
+    let nightlyRate = price || (selectedRoomObj ? selectedRoomObj.price : 2199);
+    let totalEst = nightlyRate * nights;
+
     let msg = `Namaste! 🙏 I would like to book a stay at Hotel Velora Inn, Varanasi.\n`;
     if (roomName) {
-      msg += `• Room: ${roomName} ${price ? `(₹${price}/night)` : ''}\n`;
+      msg += `• Room: ${roomName} (₹${nightlyRate}/night)\n`;
     } else {
       msg += `• Room Preference: ${roomType}\n`;
     }
     if (checkIn) msg += `• Check-in: ${checkIn}\n`;
     if (checkOut) msg += `• Check-out: ${checkOut}\n`;
+    msg += `• Duration: ${nights} ${nights === 1 ? 'Night' : 'Nights'}\n`;
     msg += `• Guests: ${guests}\n`;
+    msg += `• Estimated Tariff: ₹${totalEst.toLocaleString('en-IN')}\n\n`;
     msg += `Please confirm availability and best direct booking tariff.`;
 
     const encoded = encodeURIComponent(msg);
@@ -117,6 +172,11 @@ export default function App() {
     const msg = `Namaste! New Direct Inquiry from Website:\n• Name: ${inquiryName}\n• Phone: ${inquiryPhone}\n• Dates: ${inquiryDates}\n• Message: ${inquiryMsg}`;
     const encoded = encodeURIComponent(msg);
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`, '_blank');
+  };
+
+  const openRoomModal = (room: Room) => {
+    setSelectedRoom(room);
+    setActiveImageIndex(0);
   };
 
   return (
@@ -226,14 +286,14 @@ export default function App() {
         )}
       </header>
 
-      {/* 3. HERO SECTION + DIRECT BOOKING BAR */}
+      {/* 3. HERO SECTION */}
       <section className="relative bg-[#0F172A] text-white py-20 lg:py-28 overflow-hidden">
         {/* Background Image with Gradient Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=2000&q=80" 
             alt="Hotel Velora Inn Suite Varanasi" 
-            className="w-full h-full object-cover object-center opacity-30 scale-105 animate-fade-in"
+            className="w-full h-full object-cover object-center opacity-30 scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/70 to-transparent"></div>
         </div>
@@ -272,34 +332,40 @@ export default function App() {
         </div>
       </section>
 
-      {/* INTERACTIVE WHATSAPP BOOKING BAR (Floats over hero/content intersection) */}
+      {/* ENHANCED DIRECT BOOKING BAR (Floats over hero/content intersection) */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-30 -mt-10 sm:-mt-12 mb-12">
-        <div className="bg-white rounded-2xl shadow-2xl border border-[#C5A059]/30 p-4 sm:p-6 backdrop-blur-xl">
-          <div className="text-xs font-bold uppercase tracking-wider text-[#C5A059] mb-3 flex items-center gap-1.5">
-            <Calendar className="w-4 h-4" /> Instant WhatsApp Booking Bar — Direct Rates
+        <div className="bg-white rounded-2xl shadow-2xl border border-[#C5A059]/30 p-5 sm:p-7 backdrop-blur-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+            <div className="text-xs font-bold uppercase tracking-wider text-[#C5A059] flex items-center gap-1.5">
+              <Calendar className="w-4 h-4" /> Direct Booking Bar — Save 20% vs OTA Apps
+            </div>
+            <div className="text-xs text-slate-500 font-medium">
+              Selected Stay: <span className="text-[#0F172A] font-bold">{nights} {nights === 1 ? 'Night' : 'Nights'}</span>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Check-In Date</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Check-In Date</label>
               <input 
                 type="date" 
                 value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
+                onChange={(e) => handleCheckInChange(e.target.value)}
                 className="w-full bg-[#FAF8F5] border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-[#C5A059]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Check-Out Date</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Check-Out Date</label>
               <input 
                 type="date" 
                 value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
+                onChange={(e) => handleCheckOutChange(e.target.value)}
                 className="w-full bg-[#FAF8F5] border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-[#C5A059]"
               />
+              {dateError && <p className="text-[10px] text-red-500 mt-1">{dateError}</p>}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Room Type</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Room Type</label>
               <select 
                 value={roomType}
                 onChange={(e) => setRoomType(e.target.value)}
@@ -311,7 +377,7 @@ export default function App() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Guests</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Guests</label>
               <select 
                 value={guests}
                 onChange={(e) => setGuests(e.target.value)}
@@ -325,13 +391,14 @@ export default function App() {
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
             <span className="text-xs text-slate-500 italic">
-              ✨ No prepayment fees • Instant confirmation via WhatsApp with hotel manager.
+              ✨ Instant confirmation via WhatsApp • Zero prepayment charges.
             </span>
             <button 
               onClick={() => handleWhatsAppBooking()}
-              className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition shadow-md flex items-center justify-center gap-2"
+              disabled={!!dateError}
+              className={`w-full sm:w-auto px-7 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition shadow-md flex items-center justify-center gap-2 ${dateError ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <MessageSquare className="w-4 h-4" /> Check Availability on WhatsApp ➔
             </button>
@@ -376,7 +443,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 5. ROOMS & SUITES (3 CARDS) */}
+      {/* 5. ROOMS & SUITES (3 CARDS WITH INTERACTIVE GALLERY MODAL) */}
       <section id="rooms" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="text-xs font-bold tracking-[0.2em] uppercase text-[#C5A059]">Boutique Accommodations</span>
@@ -387,12 +454,20 @@ export default function App() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {roomsData.map((room) => (
             <div key={room.id} className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl transition flex flex-col">
-              <div className="relative h-60 overflow-hidden group">
+              <div 
+                className="relative h-60 overflow-hidden group cursor-pointer"
+                onClick={() => openRoomModal(room)}
+              >
                 <img 
                   src={room.image} 
                   alt={room.name} 
                   className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                 />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                  <span className="px-4 py-2 bg-white/90 text-[#0F172A] rounded-full text-xs font-semibold shadow-lg flex items-center gap-1.5">
+                    <Maximize2 className="w-3.5 h-3.5" /> View Photo Gallery
+                  </span>
+                </div>
                 <div className="absolute top-3 right-3 bg-[#0F172A]/80 backdrop-blur-md text-white text-xs px-3 py-1 rounded-full font-medium">
                   {room.size}
                 </div>
@@ -425,10 +500,10 @@ export default function App() {
 
                   <div className="flex items-center gap-2">
                     <button 
-                      onClick={() => setSelectedRoom(room)}
-                      className="px-3 py-2 text-xs font-semibold border border-slate-300 rounded-xl hover:bg-slate-100 transition"
+                      onClick={() => openRoomModal(room)}
+                      className="px-3.5 py-2 text-xs font-semibold border border-slate-300 rounded-xl hover:bg-slate-100 transition"
                     >
-                      Details
+                      Gallery & Details
                     </button>
                     <button 
                       onClick={() => handleWhatsAppBooking(room.name, room.price)}
@@ -444,33 +519,72 @@ export default function App() {
         </div>
       </section>
 
-      {/* ROOM DETAILS MODAL */}
+      {/* INTERACTIVE PHOTO GALLERY & ROOM DETAILS MODAL */}
       {selectedRoom && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in">
-            <div className="relative h-72">
-              <img src={selectedRoom.image} alt={selectedRoom.name} className="w-full h-full object-cover" />
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl animate-fade-in flex flex-col">
+            
+            {/* Modal Header Bar */}
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-20">
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#C5A059]">{selectedRoom.size} • {selectedRoom.bed}</span>
+                <h3 className="font-luxury text-2xl sm:text-3xl font-bold text-[#0F172A]">{selectedRoom.name}</h3>
+              </div>
               <button 
                 onClick={() => setSelectedRoom(null)}
-                className="absolute top-4 right-4 bg-black/60 hover:bg-black text-white p-2 rounded-full transition"
+                className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full transition"
               >
                 <X className="w-5 h-5" />
               </button>
-              <div className="absolute bottom-4 left-4 bg-[#0F172A]/80 backdrop-blur-md text-white px-3.5 py-1.5 rounded-full text-xs font-semibold">
-                {selectedRoom.size} • {selectedRoom.bed}
+            </div>
+
+            {/* Interactive Image Gallery Carousel */}
+            <div className="relative bg-slate-900 h-72 sm:h-96 w-full flex items-center justify-center overflow-hidden">
+              <img 
+                src={selectedRoom.gallery[activeImageIndex]} 
+                alt={`${selectedRoom.name} gallery image ${activeImageIndex + 1}`} 
+                className="w-full h-full object-cover transition-all duration-300"
+              />
+
+              {/* Navigation Arrows */}
+              <button 
+                onClick={() => setActiveImageIndex((prev) => (prev === 0 ? selectedRoom.gallery.length - 1 : prev - 1))}
+                className="absolute left-4 bg-black/50 hover:bg-black/80 text-white p-2.5 rounded-full backdrop-blur-xs transition"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => setActiveImageIndex((prev) => (prev === selectedRoom.gallery.length - 1 ? 0 : prev + 1))}
+                className="absolute right-4 bg-black/50 hover:bg-black/80 text-white p-2.5 rounded-full backdrop-blur-xs transition"
+                aria-label="Next image"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              <div className="absolute bottom-4 bg-black/60 backdrop-blur-md text-white text-xs px-3.5 py-1 rounded-full">
+                Photo {activeImageIndex + 1} of {selectedRoom.gallery.length}
               </div>
             </div>
 
-            <div className="p-6 sm:p-8 space-y-6">
+            {/* Thumbnail Strip */}
+            <div className="p-4 bg-slate-100/80 border-b border-slate-200 flex items-center justify-center gap-3 overflow-x-auto">
+              {selectedRoom.gallery.map((imgUrl, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`relative w-20 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition ${activeImageIndex === idx ? 'border-[#C5A059] scale-105 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                >
+                  <img src={imgUrl} alt="thumbnail" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+
+            {/* Room Details & Amenities */}
+            <div className="p-6 sm:p-8 space-y-6 flex-1">
               <div>
-                <div className="flex justify-between items-start">
-                  <h3 className="font-luxury text-3xl font-bold text-[#0F172A]">{selectedRoom.name}</h3>
-                  <div className="text-right">
-                    <span className="text-sm text-slate-400 line-through">₹{selectedRoom.originalPrice}</span>
-                    <div className="text-2xl font-bold text-[#0F172A]">₹{selectedRoom.price} <span className="text-xs text-slate-500 font-normal">/ night</span></div>
-                  </div>
-                </div>
-                <p className="text-slate-600 mt-2 leading-relaxed">{selectedRoom.description}</p>
+                <h4 className="font-semibold text-sm uppercase tracking-wider text-[#C5A059] mb-2">About This Room</h4>
+                <p className="text-slate-600 leading-relaxed text-sm sm:text-base">{selectedRoom.description}</p>
               </div>
 
               <div>
@@ -485,20 +599,27 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs text-slate-500">Includes all taxes & complimentary Wi-Fi.</span>
+              <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <span className="text-xs text-slate-400 line-through">₹{selectedRoom.originalPrice} / night</span>
+                  <div className="text-2xl font-bold text-[#0F172A]">
+                    ₹{selectedRoom.price} <span className="text-xs text-slate-500 font-normal">/ night (Direct rate)</span>
+                  </div>
+                </div>
+
                 <button 
                   onClick={() => {
                     const room = selectedRoom;
                     setSelectedRoom(null);
                     handleWhatsAppBooking(room.name, room.price);
                   }}
-                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition flex items-center gap-2 shadow-md"
+                  className="w-full sm:w-auto px-7 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-md"
                 >
                   <MessageSquare className="w-4 h-4" /> Book {selectedRoom.name} on WhatsApp
                 </button>
               </div>
             </div>
+
           </div>
         </div>
       )}
