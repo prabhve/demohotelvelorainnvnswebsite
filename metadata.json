@@ -1,0 +1,6 @@
+{
+  "name": "Hotel Velora Inn Varanasi",
+  "description": "Boutique Comfort & Serenity in the Heart of Kashi, near Varanasi Cantt Railway Station.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
